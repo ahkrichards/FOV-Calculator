@@ -269,6 +269,62 @@ $(document).ready(function() {
 		}
 	});
 
+	function setCopyStatus(message, isError) {
+		var status = $('#copy-status');
+		status.text(message);
+		status.css('color', isError ? '#8a1f1f' : '#2a6c2a');
+	}
+
+	function buildShareUrl() {
+		var params = new URLSearchParams();
+		params.set('ratio', $('#ratio').val());
+		params.set('screens', $('#screens').val());
+		params.set('curved', $('#curved').is(':checked') ? '1' : '0');
+		params.set('screensize', $("#screensizeSlider").slider("value"));
+		params.set('bezel', $("#bezelSlider").slider("value"));
+		params.set('radius', $("#radiusSlider").slider("value"));
+		params.set('distanceUnit', distanceUnit);
+		params.set('distance', $("#distanceSlider").slider("value"));
+
+		return window.location.origin + window.location.pathname + '?' + params.toString();
+	}
+
+	function copyTextToClipboard(text) {
+		if (navigator.clipboard && navigator.clipboard.writeText) {
+			return navigator.clipboard.writeText(text);
+		}
+
+		return new Promise(function(resolve, reject) {
+			var temp = document.createElement('textarea');
+			temp.value = text;
+			temp.setAttribute('readonly', '');
+			temp.style.position = 'absolute';
+			temp.style.left = '-9999px';
+			document.body.appendChild(temp);
+			temp.select();
+
+			var success = false;
+			try {
+				success = document.execCommand('copy');
+			} catch (error) {
+				success = false;
+			}
+
+			document.body.removeChild(temp);
+			if (success) { resolve(); }
+			else { reject(); }
+		});
+	}
+
+	$('#copy-link').on('click', function() {
+		var url = buildShareUrl();
+		copyTextToClipboard(url).then(function() {
+			setCopyStatus('Link copied to clipboard.');
+		}).catch(function() {
+			setCopyStatus('Copy failed. Select and copy the URL from the address bar.', true);
+		});
+	});
+
 	function applyQueryParams() {
 		var params = new URLSearchParams(window.location.search);
 
